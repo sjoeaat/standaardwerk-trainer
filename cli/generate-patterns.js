@@ -8,7 +8,7 @@
 
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
-import { PatternGenerator } from './src/core/PatternGenerator.js';
+import { PatternGenerator } from '../src/core/PatternGenerator.js';
 
 // Parse command line arguments
 const args = process.argv.slice(2);

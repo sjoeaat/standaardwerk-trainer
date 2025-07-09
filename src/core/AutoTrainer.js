@@ -96,9 +96,9 @@ export class AutoTrainer {
     console.log(`📋 Training completed. Final report: ${finalReport}`);
     
     return {
-      iterations: this.currentIteration,
+      totalIterations: this.currentIteration,
       converged: this.converged,
-      finalMetrics: previousMetrics,
+      finalMetrics: previousMetrics || {},
       trainingHistory: this.trainingHistory,
       reportPath: finalReport
     };
@@ -128,13 +128,14 @@ export class AutoTrainer {
         processingTime: 0
       };
       
-      await this.cliParser.parseFile(file, iterationDir);
+      const parseResult = await this.cliParser.parseFile(file);
       
       results.push({
         filename: file,
         metrics: { ...this.cliParser.metrics },
-        suggestions: [...this.cliParser.pendingSuggestions],
-        processedFiles: [...this.cliParser.processedFiles]
+        suggestions: parseResult.suggestions || [],
+        processedFiles: [parseResult],
+        parseResult: parseResult
       });
     }
     
@@ -146,12 +147,12 @@ export class AutoTrainer {
    */
   calculateTrainingMetrics(results) {
     const totalFiles = results.length;
-    const totalSteps = results.reduce((sum, r) => sum + r.metrics.totalSteps, 0);
-    const totalVariables = results.reduce((sum, r) => sum + r.metrics.totalVariables, 0);
-    const totalErrors = results.reduce((sum, r) => sum + r.metrics.totalErrors, 0);
-    const totalWarnings = results.reduce((sum, r) => sum + r.metrics.totalWarnings, 0);
-    const totalUnknownPatterns = results.reduce((sum, r) => sum + r.metrics.unknownPatterns, 0);
-    const totalSuggestions = results.reduce((sum, r) => sum + r.suggestions.length, 0);
+    const totalSteps = results.reduce((sum, r) => sum + (r.parseResult?.steps?.length || 0), 0);
+    const totalVariables = results.reduce((sum, r) => sum + (r.parseResult?.variables?.length || 0), 0);
+    const totalErrors = results.reduce((sum, r) => sum + (r.parseResult?.errors?.length || 0), 0);
+    const totalWarnings = results.reduce((sum, r) => sum + (r.parseResult?.warnings?.length || 0), 0);
+    const totalUnknownPatterns = results.reduce((sum, r) => sum + (r.parseResult?.unknownPatterns?.length || 0), 0);
+    const totalSuggestions = results.reduce((sum, r) => sum + (r.parseResult?.suggestions?.length || 0), 0);
     
     // Calculate quality metrics
     const errorRate = totalSteps > 0 ? totalErrors / totalSteps : 0;
@@ -194,7 +195,7 @@ export class AutoTrainer {
    * Extract high-confidence suggestions from parsing results
    */
   extractHighConfidenceSuggestions(results) {
-    const allSuggestions = results.flatMap(r => r.suggestions);
+    const allSuggestions = results.flatMap(r => r.parseResult?.suggestions || []);
     
     // Filter by confidence threshold
     const highConfidenceSuggestions = allSuggestions.filter(s => 
@@ -217,20 +218,20 @@ export class AutoTrainer {
     const groups = new Map();
     
     suggestions.forEach(suggestion => {
-      const key = `${suggestion.suggestedGroup}-${suggestion.potentialType}`;
+      const key = `${suggestion.type || suggestion.suggestedGroup}-${suggestion.potentialType || suggestion.type}`;
       
       if (!groups.has(key)) {
         groups.set(key, {
           ...suggestion,
           frequency: 1,
-          examples: [suggestion.originalLine]
+          examples: [suggestion.pattern || suggestion.originalLine]
         });
       } else {
         const group = groups.get(key);
         group.frequency++;
         group.confidence = Math.max(group.confidence, suggestion.confidence);
         if (group.examples.length < 5) {
-          group.examples.push(suggestion.originalLine);
+          group.examples.push(suggestion.pattern || suggestion.originalLine);
         }
       }
     });
@@ -246,19 +247,23 @@ export class AutoTrainer {
     
     // Load current syntax rules
     const currentRules = { ...this.cliParser.syntaxRules };
-    const currentValidationRules = { ...this.cliParser.validationRules };
+    const currentValidationRules = this.cliParser.validationRules ? { ...this.cliParser.validationRules } : {};
     
     for (const suggestion of suggestions) {
       if (this.shouldApplySuggestion(suggestion)) {
-        console.log(`🔧 Applying suggestion: ${suggestion.suggestedGroup} - ${suggestion.originalLine.substring(0, 50)}...`);
-        
         // Apply suggestion based on type
-        if (suggestion.suggestedGroup === 'schritt') {
-          this.applySCHRITTSuggestion(currentRules, suggestion);
-        } else if (suggestion.suggestedGroup === 'variable') {
+        const suggestionType = suggestion.type || suggestion.suggestedGroup;
+        const displayText = suggestion.pattern || suggestion.originalLine || suggestion.suggestion || 'Unknown';
+        console.log(`🔧 Applying suggestion: ${suggestionType} - ${displayText.substring(0, 50)}...`);
+        
+        if (suggestionType === 'cross_reference') {
+          this.applyCrossReferenceSuggestion(currentRules, suggestion);
+        } else if (suggestionType === 'variable_assignment') {
           this.applyVariableSuggestion(currentValidationRules, suggestion);
-        } else if (suggestion.suggestedGroup === 'condition') {
+        } else if (suggestionType === 'condition') {
           this.applyConditionSuggestion(currentRules, suggestion);
+        } else if (suggestionType === 'schritt') {
+          this.applySCHRITTSuggestion(currentRules, suggestion);
         }
         
         appliedCount++;
@@ -267,9 +272,15 @@ export class AutoTrainer {
     
     // Update CLI parser rules
     this.cliParser.syntaxRules = currentRules;
-    this.cliParser.validationRules = currentValidationRules;
-    this.cliParser.parser.syntaxRules = currentRules;
-    this.cliParser.parser.validationRules = currentValidationRules;
+    if (this.cliParser.validationRules) {
+      this.cliParser.validationRules = currentValidationRules;
+    }
+    if (this.cliParser.parser) {
+      this.cliParser.parser.syntaxRules = currentRules;
+      if (this.cliParser.parser.validationRules) {
+        this.cliParser.parser.validationRules = currentValidationRules;
+      }
+    }
     
     // Save updated rules
     await this.saveUpdatedRules(currentRules, currentValidationRules, outputDir, iteration);
@@ -297,7 +308,7 @@ export class AutoTrainer {
     
     // Add pattern for step detection
     const newPattern = {
-      pattern: suggestion.suggestedRegex,
+      pattern: suggestion.suggestedRegex || suggestion.pattern,
       description: `Auto-learned from ${suggestion.frequency} examples`,
       confidence: suggestion.confidence,
       examples: suggestion.examples
@@ -331,7 +342,7 @@ export class AutoTrainer {
     }
     
     // Add new pattern
-    const regexPattern = new RegExp(suggestion.suggestedRegex);
+    const regexPattern = new RegExp(suggestion.suggestedRegex || suggestion.pattern);
     validationRules.groups.autoLearned.patterns.push(regexPattern);
   }
 
@@ -345,12 +356,31 @@ export class AutoTrainer {
     }
     
     const newPattern = {
-      pattern: suggestion.suggestedRegex,
-      type: suggestion.potentialType,
+      pattern: suggestion.suggestedRegex || suggestion.pattern,
+      type: suggestion.potentialType || suggestion.type,
       confidence: suggestion.confidence
     };
     
     rules.conditionPatterns.push(newPattern);
+  }
+
+  /**
+   * Apply cross-reference suggestions
+   */
+  applyCrossReferenceSuggestion(rules, suggestion) {
+    // Add cross-reference patterns
+    if (!rules.crossReferencePatterns) {
+      rules.crossReferencePatterns = [];
+    }
+    
+    const newPattern = {
+      pattern: suggestion.suggestedRegex || suggestion.pattern,
+      description: `Auto-learned cross-reference from ${suggestion.frequency || 1} examples`,
+      confidence: suggestion.confidence,
+      examples: suggestion.examples
+    };
+    
+    rules.crossReferencePatterns.push(newPattern);
   }
 
   /**
@@ -391,10 +421,12 @@ export class AutoTrainer {
       JSON.stringify(this.cliParser.syntaxRules, null, 2)
     );
     
-    writeFileSync(
-      join(backupDir, 'original-validation-rules.json'),
-      JSON.stringify(this.cliParser.validationRules, null, 2)
-    );
+    if (this.cliParser.validationRules) {
+      writeFileSync(
+        join(backupDir, 'original-validation-rules.json'),
+        JSON.stringify(this.cliParser.validationRules, null, 2)
+      );
+    }
     
     console.log(`💾 Original rules backed up to ${backupDir}`);
   }
@@ -464,10 +496,10 @@ export class AutoTrainer {
       .sort((a, b) => (b.confidence * b.frequency) - (a.confidence * a.frequency))
       .slice(0, 20)
       .map(s => ({
-        suggestedGroup: s.suggestedGroup,
+        suggestedGroup: s.type || s.suggestedGroup,
         confidence: s.confidence,
         frequency: s.frequency,
-        examples: s.examples.slice(0, 3)
+        examples: s.examples ? s.examples.slice(0, 3) : []
       }));
   }
 
