@@ -1,0 +1,280 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2025-07-08",
+  "groups": {
+    "hulpmerker": {
+      "name": "Hulpmerker",
+      "description": "Standard auxiliary markers (Bool type)",
+      "patterns": [
+        {},
+        {},
+        {},
+        {},
+        {}
+      ],
+      "excludePatterns": [
+        {},
+        {},
+        {},
+        {},
+        {}
+      ],
+      "implementation": {
+        "type": "coil",
+        "alternativeType": "sr",
+        "dataType": "Bool",
+        "arrayName": "Hulp",
+        "arrayRange": [
+          1,
+          32
+        ]
+      },
+      "validation": {
+        "requiresConditions": true,
+        "allowsSetResetTable": true,
+        "maxConditions": 20
+      }
+    },
+    "storing": {
+      "name": "Storing",
+      "description": "Fault/alarm variables (Bool type)",
+      "patterns": [
+        {},
+        {},
+        {}
+      ],
+      "implementation": {
+        "type": "coil",
+        "dataType": "Bool",
+        "arrayName": "Storing",
+        "arrayRange": [
+          1,
+          32
+        ]
+      },
+      "validation": {
+        "requiresConditions": true,
+        "allowsSetResetTable": true,
+        "maxConditions": 10
+      }
+    },
+    "melding": {
+      "name": "Melding",
+      "description": "Notification/message variables (Bool type)",
+      "patterns": [
+        {},
+        {},
+        {}
+      ],
+      "implementation": {
+        "type": "coil",
+        "dataType": "Bool",
+        "arrayName": "Melding",
+        "arrayRange": [
+          1,
+          32
+        ]
+      },
+      "validation": {
+        "requiresConditions": true,
+        "allowsSetResetTable": true,
+        "maxConditions": 10
+      }
+    },
+    "tijd": {
+      "name": "Tijd",
+      "description": "Timer variables (Time type)",
+      "patterns": [
+        {},
+        {},
+        {}
+      ],
+      "implementation": {
+        "type": "timer",
+        "dataType": "IEC_TIMER",
+        "arrayName": "Tijd",
+        "arrayRange": [
+          1,
+          10
+        ]
+      },
+      "validation": {
+        "requiresConditions": false,
+        "allowsSetResetTable": false,
+        "maxConditions": 0
+      }
+    },
+    "teller": {
+      "name": "Teller",
+      "description": "Counter variables (Int type)",
+      "patterns": [
+        {},
+        {},
+        {},
+        {}
+      ],
+      "implementation": {
+        "type": "counter",
+        "dataType": "Int",
+        "arrayName": "Teller",
+        "arrayRange": [
+          1,
+          10
+        ]
+      },
+      "validation": {
+        "requiresConditions": false,
+        "allowsSetResetTable": false,
+        "maxConditions": 0
+      }
+    },
+    "variabele": {
+      "name": "Variabele",
+      "description": "General integer variables (Int type)",
+      "patterns": [
+        {},
+        {},
+        {}
+      ],
+      "implementation": {
+        "type": "variable",
+        "dataType": "Int",
+        "arrayName": "Variable",
+        "arrayRange": [
+          1,
+          32
+        ]
+      },
+      "validation": {
+        "requiresConditions": false,
+        "allowsSetResetTable": false,
+        "maxConditions": 0
+      }
+    }
+  },
+  "stepValidation": {
+    "rust": {
+      "name": "RUST",
+      "description": "Rest/idle state (implicit logic)",
+      "patterns": [
+        {}
+      ],
+      "implementation": {
+        "stepNumber": 0,
+        "implicitLogic": true,
+        "negatesAllOtherSteps": true
+      },
+      "validation": {
+        "allowsExitConditions": true,
+        "allowsEntryConditions": false,
+        "maxConditions": 10
+      }
+    },
+    "schritt": {
+      "name": "SCHRITT",
+      "description": "Sequential steps",
+      "patterns": [
+        {},
+        {},
+        {}
+      ],
+      "implementation": {
+        "stepNumber": "dynamic",
+        "implicitLogic": false,
+        "requiresPreviousStep": true
+      },
+      "validation": {
+        "allowsExitConditions": true,
+        "allowsEntryConditions": true,
+        "allowsVonSchritt": true,
+        "maxConditions": 20
+      }
+    }
+  },
+  "crossReferenceValidation": {
+    "pattern": {},
+    "patterns": [
+      {},
+      {}
+    ],
+    "validation": {
+      "requiresProgramExists": true,
+      "requiresStepsExist": true,
+      "allowsMultipleSteps": true,
+      "separator": "+"
+    }
+  },
+  "transitionValidation": {
+    "vonSchritt": {
+      "pattern": {},
+      "validation": {
+        "requiresSourceStep": true,
+        "allowsOrLogic": true,
+        "maxTransitions": 5
+      }
+    },
+    "sequential": {
+      "validation": {
+        "implicitFromPrevious": true,
+        "requiresExitConditions": true,
+        "implicitNichtPrevious": true
+      }
+    }
+  },
+  "conditionValidation": {
+    "operators": {
+      "and": [
+        "AND",
+        "EN",
+        "UND"
+      ],
+      "or": [
+        "OR",
+        "OF",
+        "ODER"
+      ],
+      "not": [
+        "NOT",
+        "NIET",
+        "NICHT"
+      ]
+    },
+    "comparison": {
+      "operators": [
+        "==",
+        "!=",
+        "<>",
+        ">=",
+        "<=",
+        ">",
+        "<"
+      ],
+      "allowedTypes": [
+        "Int",
+        "Real",
+        "String",
+        "Bool"
+      ]
+    },
+    "timer": {
+      "pattern": {},
+      "validation": {
+        "requiresTimeValue": true,
+        "allowedUnits": [
+          "Sek",
+          "Min",
+          "s",
+          "m"
+        ],
+        "maxTimeValue": 3600
+      }
+    },
+    "external": {
+      "pattern": {},
+      "validation": {
+        "requiresValidation": true,
+        "allowsNesting": false
+      }
+    }
+  }
+}

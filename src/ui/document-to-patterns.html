@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document to Patterns Workflow</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        .workflow-steps {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .step {
+            border: 2px solid #e1e5e9;
+            border-radius: 12px;
+            padding: 25px;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .step.active {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .step.completed {
+            border-color: #28a745;
+            background: #f8fff8;
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .step-number {
+            background: #667eea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+
+        .step.completed .step-number {
+            background: #28a745;
+        }
+
+        .step-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .step-description {
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        input[type="file"], input[type="text"], select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="file"]:focus, input[type="text"]:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .status {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.info {
+            background: #cce7ff;
+            color: #004085;
+            border: 1px solid #b3d7ff;
+        }
+
+        .file-info {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #666;
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 6px;
+        }
+
+        .command-output {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            margin-top: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .workflow-arrow {
+            text-align: center;
+            color: #667eea;
+            font-size: 24px;
+            margin: 20px 0;
+        }
+
+        .copy-btn {
+            background: #17a2b8;
+            font-size: 12px;
+            padding: 6px 12px;
+            margin-left: 10px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+            width: 0%;
+        }
+
+        .final-summary {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 1px solid #dee2e6;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .summary-item:last-child {
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📄→🎯 Document to Patterns Workflow</h1>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressBar"></div>
+        </div>
+        
+        <div class="workflow-steps">
+            <!-- Step 1: Upload Document -->
+            <div class="step active" id="step1">
+                <div class="step-header">
+                    <div class="step-number">1</div>
+                    <div class="step-title">Upload Word Document</div>
+                </div>
+                <div class="step-description">
+                    Select a .docx file containing your program descriptions (Programmbeschreibung).
+                </div>
+                
+                <div class="form-group">
+                    <label for="docxFile">Word Document (.docx):</label>
+                    <input type="file" id="docxFile" accept=".docx" required>
+                    <div id="docxFileInfo" class="file-info" style="display: none;"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="outputName">Training Data Filename:</label>
+                    <input type="text" id="outputName" value="training-data.json" placeholder="training-data.json">
+                </div>
+                
+                <div class="form-group">
+                    <label for="outputFormat">Output Format:</label>
+                    <select id="outputFormat">
+                        <option value="suggestions">Suggestions (for pattern generation)</option>
+                        <option value="structured">Structured (detailed breakdown)</option>
+                    </select>
+                </div>
+                
+                <button class="btn" onclick="processDocx()">Convert to Training Data</button>
+                <div id="step1Status" class="status"></div>
+            </div>
+
+            <div class="workflow-arrow">⬇️</div>
+
+            <!-- Step 2: Generate Patterns -->
+            <div class="step" id="step2">
+                <div class="step-header">
+                    <div class="step-number">2</div>
+                    <div class="step-title">Generate Patterns</div>
+                </div>
+                <div class="step-description">
+                    Use the training data to automatically generate regex patterns for better recognition.
+                </div>
+                
+                <div class="form-group">
+                    <label for="patternOutput">Pattern Config Filename:</label>
+                    <input type="text" id="patternOutput" value="validation-config.json" placeholder="validation-config.json">
+                </div>
+                
+                <div class="form-group">
+                    <label for="minFrequency">Minimum Frequency:</label>
+                    <input type="number" id="minFrequency" value="3" min="1" max="10">
+                </div>
+                
+                <div class="form-group">
+                    <label for="minPrecision">Minimum Precision:</label>
+                    <input type="number" id="minPrecision" value="0.7" min="0.1" max="1.0" step="0.1">
+                </div>
+                
+                <button class="btn" onclick="generatePatterns()" disabled>Generate Patterns</button>
+                <div id="step2Status" class="status"></div>
+            </div>
+
+            <div class="workflow-arrow">⬇️</div>
+
+            <!-- Step 3: Import & Use -->
+            <div class="step" id="step3">
+                <div class="step-header">
+                    <div class="step-number">3</div>
+                    <div class="step-title">Import & Use</div>
+                </div>
+                <div class="step-description">
+                    Import the generated patterns into your validation configuration and start using them.
+                </div>
+                
+                <div id="finalInstructions" style="display: none;">
+                    <p><strong>Your patterns are ready!</strong> Here's how to use them:</p>
+                    <ol style="margin: 15px 0 15px 20px;">
+                        <li>Open your main application: <code>npm run dev</code></li>
+                        <li>Go to the "Validation Configuration" tab</li>
+                        <li>Click "Import" and select your generated config file</li>
+                        <li>The new patterns will improve variable recognition</li>
+                    </ol>
+                </div>
+                
+                <div id="step3Status" class="status"></div>
+            </div>
+        </div>
+
+        <div class="final-summary" id="finalSummary" style="display: none;">
+            <h3>📊 Workflow Summary</h3>
+            <div id="summaryContent"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        let trainingDataFile = null;
+        let workflowData = {
+            docxFile: null,
+            trainingData: null,
+            patterns: null
+        };
+
+        // File upload handling
+        document.getElementById('docxFile').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                workflowData.docxFile = file;
+                const info = document.getElementById('docxFileInfo');
+                info.textContent = `Selected: ${file.name} (${(file.size / 1024 / 1024).toFixed(1)} MB)`;
+                info.style.display = 'block';
+            }
+        });
+
+        function processDocx() {
+            const file = workflowData.docxFile;
+            if (!file) {
+                showStatus('step1Status', 'Please select a DOCX file', 'error');
+                return;
+            }
+
+            const outputName = document.getElementById('outputName').value;
+            const outputFormat = document.getElementById('outputFormat').value;
+
+            // Generate CLI command for DOCX conversion
+            const command = `node docx-to-json.js --input "${file.name}" --output "${outputName}" --format ${outputFormat}`;
+            
+            showStatus('step1Status', 
+                `✅ Command generated! Copy and run in your terminal:\\n\\n${command}`, 
+                'success'
+            );
+
+            // Copy to clipboard
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(command);
+            }
+
+            // Enable next step
+            setTimeout(() => {
+                completeStep(1);
+                activateStep(2);
+                trainingDataFile = outputName;
+                updateProgress(33);
+            }, 1000);
+        }
+
+        function generatePatterns() {
+            if (!trainingDataFile) {
+                showStatus('step2Status', 'Please complete step 1 first', 'error');
+                return;
+            }
+
+            const patternOutput = document.getElementById('patternOutput').value;
+            const minFrequency = document.getElementById('minFrequency').value;
+            const minPrecision = document.getElementById('minPrecision').value;
+
+            // Generate CLI command for pattern generation
+            const command = `node generate-patterns.js --input "${trainingDataFile}" --output "${patternOutput}" --minFrequency ${minFrequency} --minPrecision ${minPrecision}`;
+            
+            showStatus('step2Status', 
+                `✅ Command generated! Copy and run in your terminal:\\n\\n${command}`, 
+                'success'
+            );
+
+            // Copy to clipboard
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(command);
+            }
+
+            // Enable next step
+            setTimeout(() => {
+                completeStep(2);
+                activateStep(3);
+                showFinalInstructions();
+                updateProgress(100);
+                showFinalSummary();
+            }, 1000);
+        }
+
+        function completeStep(stepNum) {
+            const step = document.getElementById(`step${stepNum}`);
+            step.classList.remove('active');
+            step.classList.add('completed');
+        }
+
+        function activateStep(stepNum) {
+            const step = document.getElementById(`step${stepNum}`);
+            step.classList.add('active');
+            
+            // Enable button for this step
+            if (stepNum === 2) {
+                document.querySelector('#step2 .btn').disabled = false;
+            }
+        }
+
+        function showStatus(elementId, message, type) {
+            const statusEl = document.getElementById(elementId);
+            statusEl.className = `status ${type}`;
+            statusEl.textContent = message;
+            statusEl.style.display = 'block';
+        }
+
+        function showFinalInstructions() {
+            document.getElementById('finalInstructions').style.display = 'block';
+            showStatus('step3Status', 'Workflow completed successfully!', 'success');
+        }
+
+        function updateProgress(percentage) {
+            document.getElementById('progressBar').style.width = percentage + '%';
+        }
+
+        function showFinalSummary() {
+            const summary = document.getElementById('finalSummary');
+            const content = document.getElementById('summaryContent');
+            
+            content.innerHTML = `
+                <div class="summary-item">
+                    <span>📄 Document processed:</span>
+                    <span>${workflowData.docxFile?.name || 'N/A'}</span>
+                </div>
+                <div class="summary-item">
+                    <span>📊 Training data:</span>
+                    <span>${trainingDataFile || 'N/A'}</span>
+                </div>
+                <div class="summary-item">
+                    <span>🎯 Pattern config:</span>
+                    <span>${document.getElementById('patternOutput').value}</span>
+                </div>
+                <div class="summary-item">
+                    <span>⚙️ Min precision:</span>
+                    <span>${document.getElementById('minPrecision').value}</span>
+                </div>
+            `;
+            
+            summary.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

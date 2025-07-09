@@ -1,0 +1,79 @@
+{
+  "summary": {
+    "totalIterations": 2,
+    "converged": true,
+    "maxIterations": 3,
+    "minConfidence": 0.75,
+    "convergenceThreshold": 0.05,
+    "trainingStarted": "2025-07-09T07:23:21.018Z",
+    "trainingCompleted": "2025-07-09T07:23:26.338Z"
+  },
+  "progressMetrics": [
+    {
+      "iteration": 1,
+      "metrics": {
+        "totalFiles": 3,
+        "totalSteps": 2101,
+        "totalVariables": 266,
+        "totalErrors": 2193,
+        "totalWarnings": 1933,
+        "totalUnknownPatterns": 21148,
+        "totalSuggestions": 11584,
+        "errorRate": 1.0437886720609233,
+        "warningRate": 0.9200380771061399,
+        "unknownPatternRate": 8.934516265314745,
+        "parsingEfficiency": 0.10065915373166064
+      },
+      "appliedSuggestions": 2,
+      "timestamp": "2025-07-09T07:23:21.018Z"
+    }
+  ],
+  "finalMetrics": {
+    "totalFiles": 3,
+    "totalSteps": 2101,
+    "totalVariables": 266,
+    "totalErrors": 2193,
+    "totalWarnings": 1933,
+    "totalUnknownPatterns": 21148,
+    "totalSuggestions": 11584,
+    "errorRate": 1.0437886720609233,
+    "warningRate": 0.9200380771061399,
+    "unknownPatternRate": 8.934516265314745,
+    "parsingEfficiency": 0.10065915373166064
+  },
+  "improvementSummary": {},
+  "bestSuggestions": [
+    {
+      "suggestedGroup": "hulpmerker",
+      "confidence": 0.8,
+      "frequency": 2464,
+      "examples": [
+        "Freigabe Start Produktion =",
+        "Aktuell Rezept ist OK =",
+        "Aktuelle Rezept.Käsekode OK (Käserezeptem.Rezept[1..100].Käsekode == Aktuelle Rezept.Käsekode)"
+      ]
+    },
+    {
+      "suggestedGroup": "cross_reference",
+      "confidence": 0.9,
+      "frequency": 1361,
+      "examples": [
+        "Gestartet (Presselektion füllen/entleeren SCHRITT 1)",
+        "T15/16 Leer (Entleeren Einfuhrseite Pressen SCHRITT 3)",
+        "Entleeren Einfuhrseite pressen fertig (Entleeren Einfuhrseite Pressen RUHE)"
+      ]
+    }
+  ],
+  "recommendations": [
+    {
+      "type": "error_rate",
+      "message": "High error rate detected. Consider manual review of validation rules.",
+      "priority": "medium"
+    },
+    {
+      "type": "unknown_patterns",
+      "message": "Many unknown patterns remain. Consider expanding training data or manual rule creation.",
+      "priority": "medium"
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "name": "standaardwerk-trainer",
+  "version": "1.0.0",
+  "description": "Training and pattern generation for standaardwerk parser",
+  "type": "module",
+  "main": "src/core/AutoTrainer.js",
+  "bin": {
+    "standaardwerk-train": "cli/generate-patterns.js"
+  },
+  "scripts": {
+    "ui": "python -m http.server 8080",
+    "train": "node cli/generate-patterns.js",
+    "test": "echo 'No tests yet' && exit 0"
+  },
+  "keywords": [
+    "training",
+    "pattern-generation",
+    "machine-learning",
+    "parsing",
+    "automation"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "mammoth": "^1.9.1"
+  },
+  "peerDependencies": {
+    "standaardwerk-parser": "^1.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sjoeaat/standaardwerk-trainer.git"
+  }
+}
