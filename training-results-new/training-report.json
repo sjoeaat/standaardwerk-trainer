@@ -1,0 +1,64 @@
+{
+  "summary": {
+    "totalIterations": 2,
+    "converged": true,
+    "maxIterations": 5,
+    "minConfidence": 0.7,
+    "convergenceThreshold": 0.03,
+    "trainingStarted": "2025-07-10T22:17:31.918Z",
+    "trainingCompleted": "2025-07-10T22:17:32.020Z"
+  },
+  "progressMetrics": [
+    {
+      "iteration": 1,
+      "metrics": {
+        "totalFiles": 1,
+        "totalSteps": 16,
+        "totalVariables": 35,
+        "totalErrors": 0,
+        "totalWarnings": 0,
+        "totalUnknownPatterns": 19,
+        "totalSuggestions": 6,
+        "errorRate": 0,
+        "warningRate": 0,
+        "unknownPatternRate": 0.37254901960784315,
+        "parsingEfficiency": 0.7285714285714285
+      },
+      "appliedSuggestions": 1,
+      "timestamp": "2025-07-10T22:17:31.918Z"
+    }
+  ],
+  "finalMetrics": {
+    "totalFiles": 1,
+    "totalSteps": 16,
+    "totalVariables": 35,
+    "totalErrors": 0,
+    "totalWarnings": 0,
+    "totalUnknownPatterns": 19,
+    "totalSuggestions": 6,
+    "errorRate": 0,
+    "warningRate": 0,
+    "unknownPatternRate": 0.37254901960784315,
+    "parsingEfficiency": 0.7285714285714285
+  },
+  "improvementSummary": {},
+  "bestSuggestions": [
+    {
+      "suggestedGroup": "cross_reference",
+      "confidence": 0.8,
+      "frequency": 6,
+      "examples": [
+        "VON SCHRITT 3",
+        "+ VON SCHRITT 4",
+        "Gestartet (Presselektion füllen/entleeren SCHRITT 1)"
+      ]
+    }
+  ],
+  "recommendations": [
+    {
+      "type": "unknown_patterns",
+      "message": "Many unknown patterns remain. Consider expanding training data or manual rule creation.",
+      "priority": "medium"
+    }
+  ]
+}

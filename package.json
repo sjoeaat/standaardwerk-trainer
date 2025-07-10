@@ -22,10 +22,8 @@
   "author": "Your Name",
   "license": "MIT",
   "dependencies": {
-    "mammoth": "^1.9.1"
-  },
-  "peerDependencies": {
-    "standaardwerk-parser": "^1.0.0"
+    "mammoth": "^1.9.1",
+    "standaardwerk-parser": "file:../standaardwerk-parser"
   },
   "devDependencies": {
     "eslint": "^8.0.0"

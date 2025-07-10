@@ -1,0 +1,25 @@
+{
+  "reporter": ["html", "text", "lcov", "json"],
+  "reports-dir": "./coverage",
+  "all": true,
+  "include": [
+    "src/**/*.js",
+    "cli/**/*.js"
+  ],
+  "exclude": [
+    "tests/**",
+    "coverage/**",
+    "dist/**",
+    "node_modules/**",
+    "**/*.test.js",
+    "**/*.spec.js"
+  ],
+  "check-coverage": true,
+  "lines": 80,
+  "functions": 80,
+  "branches": 75,
+  "statements": 80,
+  "per-file": true,
+  "clean": true,
+  "temp-directory": "./coverage/tmp"
+}

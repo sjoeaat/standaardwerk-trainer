@@ -1,0 +1,14 @@
+{
+  "version": "2.0.0",
+  "generatedAt": "2025-07-10T22:17:28.221Z",
+  "patternGenerationOptions": {
+    "minFrequency": 3,
+    "minPrecision": 0.7,
+    "minRecall": 0.7,
+    "maxPatterns": 5,
+    "ngramSize": 3
+  },
+  "validationRules": {
+    "groups": {}
+  }
+}

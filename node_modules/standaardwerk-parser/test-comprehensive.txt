@@ -1,0 +1,42 @@
+RUST: Wachten op start signaal
+- Start knop ingedrukt
+- Veiligheidsdeuren gesloten
+- Geen actieve storingen
+
+SCHRITT 1: Initialiseren systeem
+- SETZEN Motorstart = TRUE
+- Motor.Running
+- TIJD T#5s
+- (Vulsysteem SCHRITT 3+4+5)
+
+SCHRITT 2: Product doseren
+STORING 23 = Doseerklep vastgelopen
+Teller1 = 5
+MELDING "Dosering actief"
+- Doseerklep.Open
+- NIET Niveausensor.Max
++ Tank.Leeg
++ Noodstop.Actief
+
+SCHRITT 3: Mengen product  
+TIJD Mengtijd = T#2m30s
+Marker1 = SCHRITT 2-4
+- Mengmotor.Aan
+- Temperatuur > 45.5 graden
+- Druk < 2.5 bar
+
+SCHRITT 4: Kwaliteitscontrole
+- Viscositeit = OK
+- pH = 7.2 - 7.8  
+- SETZEN Goedkeuring
+- RÜCKSETZEN Afkeur
+
+SCHRITT 5: Product afvoeren
+- Afvoerklep = OPEN
+- Tankniveau < 10%
++ Pompstoring
++ Overloopbeveiliging
+
+KLAAR: Process voltooid
+- RÜCKSETZEN alle kleppen
+- Statusmelding = "Gereed voor nieuwe batch"
