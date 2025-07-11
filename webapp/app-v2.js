@@ -86,7 +86,9 @@ class StandaardwerkTrainerV2 {
             conditions: [],
             crossReferences: [],
             patterns: [],
-            statistics: {}
+            statistics: {},
+            detectedLanguage: null,
+            languageConsistency: true
         };
 
         const lines = content.split('\\n');
@@ -94,12 +96,15 @@ class StandaardwerkTrainerV2 {
         let currentConditions = [];
         let insideConditionBlock = false;
         
+        // Detect document language
+        analysis.detectedLanguage = this.detectDocumentLanguage(content);
+        
         lines.forEach((line, index) => {
             const trimmed = line.trim();
             if (!trimmed) return;
 
-            // Detect step patterns (REAL patterns from industrial programs)
-            const stepMatch = trimmed.match(/^(RUST|RUHE|SCHRITT|STAP|STEP|KLAAR|FERTIG)\\s*(\\d*)\\s*:?\\s*(.*)$/i);
+            // Detect step patterns with language consistency check
+            const stepMatch = this.parseStepWithLanguage(trimmed, analysis.detectedLanguage);
             if (stepMatch) {
                 // Save previous step
                 if (currentStep) {
@@ -108,12 +113,19 @@ class StandaardwerkTrainerV2 {
                 }
                 
                 currentStep = {
-                    type: stepMatch[1].toUpperCase(),
-                    number: stepMatch[2] ? parseInt(stepMatch[2]) : 0,
-                    description: stepMatch[3] || '',
+                    type: stepMatch.type,
+                    number: stepMatch.number,
+                    description: stepMatch.description,
                     lineNumber: index + 1,
-                    conditions: []
+                    conditions: [],
+                    language: stepMatch.language
                 };
+                
+                // Check language consistency
+                if (analysis.detectedLanguage && stepMatch.language !== analysis.detectedLanguage) {
+                    analysis.languageConsistency = false;
+                }
+                
                 currentConditions = [];
                 return;
             }
@@ -153,7 +165,7 @@ class StandaardwerkTrainerV2 {
                 }
             }
 
-            // Detect conditions (NO '-' prefix in real documents!)
+            // Detect conditions (CORRECTLY: indented lines without '-' prefix!)
             if (currentStep) {
                 // Check for condition block start
                 if (trimmed === '[') {
@@ -167,30 +179,27 @@ class StandaardwerkTrainerV2 {
                     return;
                 }
                 
-                // Real condition patterns based on actual data
+                // CORRECT condition detection: indented lines without dashes
                 const isCondition = 
-                    // Indented lines after a step
-                    (line.match(/^\\s+/) && trimmed.length > 0) ||
-                    // Lines starting with condition keywords
-                    trimmed.match(/^(NICHT|NOT|NIET|WENN|IF|ALS)\\s/i) ||
-                    // Lines with comparison operators
-                    trimmed.match(/[<>=!]+/) ||
+                    // Main pattern: indented lines after a step (NO DASHES!)
+                    (line.match(/^\\s{2,}/) && trimmed.length > 0 && !trimmed.startsWith('//')) ||
                     // Lines starting with + (OR condition)
                     trimmed.startsWith('+') ||
                     // Inside condition block
                     insideConditionBlock ||
-                    // Time conditions
-                    trimmed.match(/Zeit\\s+\\d+\\s*sek\\s*\\?\\?/i);
+                    // Time conditions (special case, not indented)
+                    (trimmed.match(/(Zeit|TIJD|TIME)\\s+\\d+\\s*sek\\s*\\?\\?/i) && !currentStep.description.includes('Zeit'));
 
                 if (isCondition) {
                     const condition = {
                         text: trimmed,
                         operator: trimmed.startsWith('+') ? 'OR' : 'AND',
-                        negated: /^(NICHT|NOT|NIET)\\s/i.test(trimmed),
+                        negated: /^\\+?\\s*(NICHT|NOT|NIET)\\s/i.test(trimmed),
                         lineNumber: index + 1,
-                        isTimeCondition: /Zeit\\s+\\d+\\s*sek\\s*\\?\\?/i.test(trimmed),
+                        isTimeCondition: /(Zeit|TIJD|TIME)\\s+\\d+\\s*sek\\s*\\?\\?/i.test(trimmed),
                         hasComparison: /[<>=!]+/.test(trimmed),
-                        insideBlock: insideConditionBlock
+                        insideBlock: insideConditionBlock,
+                        language: this.detectConditionLanguage(trimmed)
                     };
 
                     // Parse time conditions
@@ -306,6 +315,115 @@ class StandaardwerkTrainerV2 {
             groups[key] = (groups[key] || 0) + 1;
         });
         return groups;
+    }
+
+    // Language detection functions - enforces one language per document
+    detectDocumentLanguage(content) {
+        const languages = {
+            de: 0, // German
+            nl: 0, // Dutch
+            en: 0  // English
+        };
+
+        // German indicators
+        if (content.match(/SCHRITT|RUHE|Zeit|STÖRUNG|MELDUNG|UND|ODER|NICHT|Rezeptur|Temperatur|Druck|Käse|sek/gi)) {
+            languages.de += (content.match(/SCHRITT|RUHE|Zeit|STÖRUNG|MELDUNG|UND|ODER|NICHT|Rezeptur|Temperatur|Druck|Käse|sek/gi) || []).length;
+        }
+
+        // Dutch indicators
+        if (content.match(/STAP|RUST|TIJD|STORING|MELDING|EN|OF|NIET|Recept|Temperatuur|Druk|Kaas|sek/gi)) {
+            languages.nl += (content.match(/STAP|RUST|TIJD|STORING|MELDING|EN|OF|NIET|Recept|Temperatuur|Druk|Kaas|sek/gi) || []).length;
+        }
+
+        // English indicators
+        if (content.match(/STEP|IDLE|TIME|FAULT|MESSAGE|AND|OR|NOT|Recipe|Temperature|Pressure|Cheese|sec/gi)) {
+            languages.en += (content.match(/STEP|IDLE|TIME|FAULT|MESSAGE|AND|OR|NOT|Recipe|Temperature|Pressure|Cheese|sec/gi) || []).length;
+        }
+
+        // Return the most prevalent language
+        const maxLang = Object.keys(languages).reduce((a, b) => languages[a] > languages[b] ? a : b);
+        return languages[maxLang] > 0 ? maxLang : 'unknown';
+    }
+
+    parseStepWithLanguage(line, expectedLanguage) {
+        const patterns = {
+            de: {
+                step: /^(SCHRITT)\s+(\d+):\s*(.+)$/i,
+                idle: /^(RUHE):\s*(.+)$/i,
+                end: /^(FERTIG|KLAAR|END):\s*(.+)$/i
+            },
+            nl: {
+                step: /^(STAP)\s+(\d+):\s*(.+)$/i,
+                idle: /^(RUST):\s*(.+)$/i,
+                end: /^(KLAAR|FERTIG|END):\s*(.+)$/i
+            },
+            en: {
+                step: /^(STEP)\s+(\d+):\s*(.+)$/i,
+                idle: /^(IDLE):\s*(.+)$/i,
+                end: /^(END|KLAAR|FERTIG):\s*(.+)$/i
+            }
+        };
+
+        // Try all languages but prefer expected language
+        const languagesToTry = expectedLanguage ? [expectedLanguage, ...Object.keys(patterns).filter(l => l !== expectedLanguage)] : Object.keys(patterns);
+
+        for (const lang of languagesToTry) {
+            const langPatterns = patterns[lang];
+            
+            // Try step pattern
+            const stepMatch = line.match(langPatterns.step);
+            if (stepMatch) {
+                return {
+                    type: stepMatch[1].toUpperCase(),
+                    number: parseInt(stepMatch[2]),
+                    description: stepMatch[3].trim(),
+                    language: lang
+                };
+            }
+
+            // Try idle pattern
+            const idleMatch = line.match(langPatterns.idle);
+            if (idleMatch) {
+                return {
+                    type: idleMatch[1].toUpperCase(),
+                    number: 0,
+                    description: idleMatch[2].trim(),
+                    language: lang
+                };
+            }
+
+            // Try end pattern
+            const endMatch = line.match(langPatterns.end);
+            if (endMatch) {
+                return {
+                    type: endMatch[1].toUpperCase(),
+                    number: 999,
+                    description: endMatch[2].trim(),
+                    language: lang
+                };
+            }
+        }
+
+        return null;
+    }
+
+    detectConditionLanguage(conditionText) {
+        // German patterns
+        if (/\b(UND|ODER|NICHT|Zeit|Temperatur|Druck|sek)\b/i.test(conditionText)) {
+            return 'de';
+        }
+        
+        // Dutch patterns
+        if (/\b(EN|OF|NIET|TIJD|Temperatuur|Druk|sek)\b/i.test(conditionText)) {
+            return 'nl';
+        }
+        
+        // English patterns
+        if (/\b(AND|OR|NOT|TIME|Temperature|Pressure|sec)\b/i.test(conditionText)) {
+            return 'en';
+        }
+        
+        return 'unknown';
     }
 
     // Real training implementation

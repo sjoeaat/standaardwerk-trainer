@@ -1,0 +1,108 @@
+Hoofdprogramma Kaasproductie FB305
+Symboliek IDB: Kaas_Productie_Systeem
+
+// Variabele declaraties
+Variabele 1 (Actieve Productielijn) = 1
+Variabele 2 (Maximale Capaciteit) = 750
+Variabele 3 (Huidige Charge) = 0
+Kaasteller Start T12A = 0
+Kaasteller Eind T12B = 0
+Temperatuur Sensor T01 = 0.0
+Druk Sensor P01 = 0.0
+
+// Hulpmerkers
+Vrijgave Start Productie = 
+Huidig Recept is OK = 
+Alle Sensoren OK = 
+Veiligheidssysteem Actief = 
+Noodstop Actief = 
+Productie Bezig = 
+Kwaliteit Controle OK = 
+
+// Storing meldingen
+STORING: Temperatuur te hoog = 
+STORING: Druk te laag = 
+STORING: Sensor defect = 
+STORING: Recept fout = 
+
+// Melding berichten
+MELDING: Productie gestart = 
+MELDING: Charge voltooid = 
+MELDING: Onderhoud vereist = 
+
+RUST: Productiesysteem gereed
+  Alle sensoren gecontroleerd
+  Veiligheidssysteem actief
+  Temperatuur in normaal bereik (18-22°C)
+  Druk stabiel (1.8-2.2 bar)
+  Recept geladen
+  Grondstoffen beschikbaar
+
+STAP 1: Productie initialisatie
+  Vrijgave Start Productie
+  Huidig Recept is OK
+  Alle Sensoren OK
+  NIET Noodstop Actief
+  Grondstoffen voorraad >= 50%
+
+STAP 2: Systeem voorbereiden
+  Veiligheidssysteem Actief
+  Alle tanks gereinigd
+  Temperatuur stabiliseren op 32°C
+  Druk instellen op 2.1 bar
+  Productie Bezig ZETTEN
+
+STAP 3: Kaas productie starten
+TIJD 1800sek ??
+  Temperatuur >= 30°C EN <= 35°C
+  Druk >= 2.0 bar EN <= 2.5 bar
+  Grondstoffen stroom actief
+  Mixer snelheid 150 rpm
+  NIET STORING: Temperatuur te hoog
+
+STAP 4: Fermentatie proces
+TIJD 7200sek ??
+[
+  pH-waarde tussen 5.8 EN 6.2
+  + Temperatuur stabiel binnen 1°C
+  + Zuurstof niveau < 5%
+  + Fermentatie actief
+]
+  Roeren elke 30 minuten
+  Monster nemen elk uur
+
+STAP 5: Kwaliteit controle
+  Kwaliteit Controle OK
+  pH-waarde gemeten
+  Structuur visueel gecontroleerd
+  Smaak test uitgevoerd
+  Certificaat afgedrukt
+
+VAN STAP 3
+  Temperatuur fout detectie
++ VAN STAP 4
+  Fermentatie probleem
+STAP 6: Fout afhandeling
+  STORING: Temperatuur te hoog RESET
+  STORING: Druk te laag RESET
+  STORING: Sensor defect RESET
+  Systeem veilig stoppen
+  Onderhoud oproepen
+
+STAP 7: Verpakking voorbereiden
+  Verpakkings materiaal beschikbaar
+  Verpakkings machine gereed
+  Etiketten voorraad check
+  Gewicht controle systeem actief
+
+// Complexe kruisverwijzingen
+Gestart (Perssectie vullen/legen STAP 1)
+T15/16 Leeg (Legen Invoerzijde Persen STAP 3)
+Legen Invoerzijde Persen gereed (Legen Invoerzijde Persen RUST)
+
+KLAAR: Productie cyclus voltooid
+  Alle processen succesvol afgerond
+  Systeem gereed voor volgende cyclus
+  Rapport gegenereerd
+  Kwaliteit geregistreerd
+  Systeem in RUST stand

@@ -1,0 +1,108 @@
+Main Program Cheese Production FB305
+Symbol IDB: Cheese_Production_System
+
+// Variable declarations
+Variable 1 (Active Production Line) = 1
+Variable 2 (Maximum Capacity) = 750
+Variable 3 (Current Batch) = 0
+Cheese Counter Start T12A = 0
+Cheese Counter End T12B = 0
+Temperature Sensor T01 = 0.0
+Pressure Sensor P01 = 0.0
+
+// Auxiliary markers
+Release Start Production = 
+Current Recipe is OK = 
+All Sensors OK = 
+Safety System Active = 
+Emergency Stop Active = 
+Production Busy = 
+Quality Control OK = 
+
+// Fault messages
+FAULT: Temperature too high = 
+FAULT: Pressure too low = 
+FAULT: Sensor defective = 
+FAULT: Recipe error = 
+
+// Message reports
+MESSAGE: Production started = 
+MESSAGE: Batch completed = 
+MESSAGE: Maintenance required = 
+
+IDLE: Production system ready
+  All sensors checked
+  Safety system active
+  Temperature in normal range (18-22°C)
+  Pressure stable (1.8-2.2 bar)
+  Recipe loaded
+  Raw materials available
+
+STEP 1: Production initialization
+  Release Start Production
+  Current Recipe is OK
+  All Sensors OK
+  NOT Emergency Stop Active
+  Raw materials stock >= 50%
+
+STEP 2: System preparation
+  Safety System Active
+  All tanks cleaned
+  Temperature stabilize at 32°C
+  Pressure set to 2.1 bar
+  Production Busy SET
+
+STEP 3: Cheese production start
+TIME 1800sec ??
+  Temperature >= 30°C AND <= 35°C
+  Pressure >= 2.0 bar AND <= 2.5 bar
+  Raw materials flow active
+  Mixer speed 150 rpm
+  NOT FAULT: Temperature too high
+
+STEP 4: Fermentation process
+TIME 7200sec ??
+[
+  pH-value between 5.8 AND 6.2
+  + Temperature stable within 1°C
+  + Oxygen level < 5%
+  + Fermentation active
+]
+  Stir every 30 minutes
+  Take sample every hour
+
+STEP 5: Quality control
+  Quality Control OK
+  pH-value measured
+  Structure visually checked
+  Taste test performed
+  Certificate printed
+
+FROM STEP 3
+  Temperature fault detection
++ FROM STEP 4
+  Fermentation problem
+STEP 6: Error handling
+  FAULT: Temperature too high RESET
+  FAULT: Pressure too low RESET
+  FAULT: Sensor defective RESET
+  System safe stop
+  Call maintenance
+
+STEP 7: Packaging preparation
+  Packaging material available
+  Packaging machine ready
+  Labels stock check
+  Weight control system active
+
+// Complex cross-references
+Started (Press section fill/empty STEP 1)
+T15/16 Empty (Empty Input Side Presses STEP 3)
+Empty Input Side Presses finished (Empty Input Side Presses IDLE)
+
+END: Production cycle completed
+  All processes successfully finished
+  System ready for next cycle
+  Report generated
+  Quality registered
+  System in IDLE state

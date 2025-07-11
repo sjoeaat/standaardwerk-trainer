@@ -1,7 +1,7 @@
-Hauptprogramm Erweiterte Käseproduktion FB305
-Symbolik IDB: Erweiterte_Kaese_Produktion
+Hauptprogramm Käseproduktion FB305
+Symbolik IDB: Kaese_Produktion_System
 
-// Variabelen declaraties
+// Variable Deklarationen
 Variable 1 (Aktive Produktionslinie) = 1
 Variable 2 (Maximale Kapazität) = 750
 Variable 3 (Aktuelle Charge) = 0
@@ -10,174 +10,173 @@ Käsezähler Ende T12B = 0
 Temperatur Sensor T01 = 0.0
 Druck Sensor P01 = 0.0
 
-// Hulpmerkers
+// Hilfsmerker
 Freigabe Start Produktion = 
 Aktuell Rezept ist OK = 
 Alle Sensoren OK = 
 Sicherheitssystem Aktiv = 
 Noodstop Actief = 
-Produktie Bezig = 
-Kwaliteit Controle OK = 
+Produktion Beschäftigt = 
+Qualität Kontrolle OK = 
 
-// Storing meldingen
-STORING: Temperatuur te hoog = 
-STORING: Druk te laag = 
-STORING: Sensor defect = 
-STORING: Receptuur fout = 
+// Störung Meldungen
+STÖRUNG: Temperatur zu hoch = 
+STÖRUNG: Druck zu niedrig = 
+STÖRUNG: Sensor defekt = 
+STÖRUNG: Rezeptur Fehler = 
 
-// Melding berichten
-MELDING: Productie gestart = 
-MELDING: Charge voltooid = 
-MELDING: Onderhoud vereist = 
+// Meldung Berichten
+MELDUNG: Produktion gestartet = 
+MELDUNG: Charge vollendet = 
+MELDUNG: Wartung erforderlich = 
 
-RUHE: Productiesysteem gereed
-- Alle sensoren gecontroleerd
-- Sicherheitssystem actief
-- Temperatuur in normaal bereik (18-22°C)
-- Druk stabiel (1.8-2.2 bar)
-- Receptuur ingeladen
-- Rohstoffe beschikbaar
+RUHE: Produktionssystem bereit
+  Alle Sensoren geprüft
+  Sicherheitssystem aktiv
+  Temperatur in normalem Bereich (18-22°C)
+  Druck stabil (1.8-2.2 bar)
+  Rezeptur geladen
+  Rohstoffe verfügbar
 
-SCHRITT 1: Productie initialisatie
-- Freigabe Start Produktion
-- Aktuell Rezept ist OK
-- Alle Sensoren OK
-- NICHT Noodstop Actief
-- Rohstoffe voorraad >= 50%
+SCHRITT 1: Produktion initialisieren
+  Freigabe Start Produktion
+  Aktuell Rezept ist OK
+  Alle Sensoren OK
+  NICHT Noodstop Actief
+  Rohstoffe Vorrat >= 50%
 
-SCHRITT 2: Systeem voorbereiden
-- Sicherheitssystem Aktiv
-- Alle tanks gereinigd
-- Temperatuur stabiliseren op 32°C
-- Druk instellen op 2.1 bar
-- Productie Bezig SET
+SCHRITT 2: System vorbereiten
+  Sicherheitssystem Aktiv
+  Alle Tanks gereinigt
+  Temperatur stabilisieren auf 32°C
+  Druck einstellen auf 2.1 bar
+  Produktion Beschäftigt SETZEN
 
-SCHRITT 3: Käse productie starten
+SCHRITT 3: Käse Produktion starten
 Zeit 1800sek ??
-- Temperatuur >= 30°C EN <= 35°C
-- Druk >= 2.0 bar EN <= 2.5 bar
-- Rohstoffe flow actief
-- Mixer snelheid 150 rpm
-- NICHT STORING: Temperatuur te hoog
+  Temperatur >= 30°C UND <= 35°C
+  Druck >= 2.0 bar UND <= 2.5 bar
+  Rohstoffe Fluss aktiv
+  Mixer Geschwindigkeit 150 rpm
+  NICHT STÖRUNG: Temperatur zu hoch
 
-SCHRITT 4: Fermentatie proces
+SCHRITT 4: Fermentation Prozess
 Zeit 7200sek ??
 [
-  pH-waarde tussen 5.8 EN 6.2
-  + Temperatuur stabiel binnen 1°C
-  + Zuurstof niveau < 5%
-  + Fermentatie actief
+  pH-Wert zwischen 5.8 UND 6.2
+  + Temperatur stabil innerhalb 1°C
+  + Sauerstoff Niveau < 5%
+  + Fermentation aktiv
 ]
-- Roeren elke 30 minuten
-- Monster nemen elk uur
+  Rühren alle 30 Minuten
+  Probe nehmen jede Stunde
 
-SCHRITT 5: Kwaliteit controle
-- Kwaliteit Controle OK
-- pH-waarde gemeten
-- Structuur visueel gecontroleerd
-- Smaak test uitgevoerd
-- Certificaat afgedrukt
+SCHRITT 5: Qualität Kontrolle
+  Qualität Kontrolle OK
+  pH-Wert gemessen
+  Struktur visuell kontrolliert
+  Geschmack Test durchgeführt
+  Zertifikat gedruckt
 
 VON SCHRITT 3
-- Temperatuur fout detectie
+  Temperatur Fehler Erkennung
 + VON SCHRITT 4
-- Fermentatie probleem
-SCHRITT 6: Fout afhandeling
-- STORING: Temperatuur te hoog RESET
-- STORING: Druk te laag RESET
-- STORING: Sensor defect RESET
-- Systeem veilig stoppen
-- Onderhoud oproepen
+  Fermentation Problem
+SCHRITT 6: Fehler Behandlung
+  STÖRUNG: Temperatur zu hoch RÜCKSETZEN
+  STÖRUNG: Druck zu niedrig RÜCKSETZEN
+  STÖRUNG: Sensor defekt RÜCKSETZEN
+  System sicher stoppen
+  Wartung rufen
 
-SCHRITT 7: Verpakking voorbereiden
-- Verpakkings materiaal beschikbaar
-- Verpakkings machine gereed
-- Etiketten voorraad check
-- Gewicht controle systeem actief
+SCHRITT 7: Verpackung vorbereiten
+  Verpackungs Material verfügbar
+  Verpackungs Maschine bereit
+  Etiketten Vorrat prüfen
+  Gewicht Kontrolle System aktiv
 
-SCHRITT 8: Käse vormen en persen
+SCHRITT 8: Käse formen und pressen
 Zeit 3600sek ??
-- Vormen temperatuur 28°C
-- Pers druk 15 bar
-- Pers tijd volgens receptuur
-- Vorm kwaliteit controle
+  Formen Temperatur 28°C
+  Press Druck 15 bar
+  Press Zeit nach Rezeptur
+  Form Qualität Kontrolle
 
-SCHRITT 9: Afkoeling en rijping
+SCHRITT 9: Abkühlung und Reifung
 Zeit 86400sek ??
-- Koelkamer temperatuur 12°C
-- Luchtvochtigheid 85%
-- Luchtcirculatie actief
-- Rijping tijd volgens receptuur
+  Kühlkammer Temperatur 12°C
+  Luftfeuchtigkeit 85%
+  Luftzirkulation aktiv
+  Reifung Zeit nach Rezeptur
 
-SCHRITT 10: Eindcontrole en verpakking
-- Eindproduct kwaliteit OK
-- Gewicht binnen tolerantie
-- Verpakking conform specificatie
-- Charge nummer toegekend
-- Traceerbaar label aangebracht
+SCHRITT 10: Endkontrolle und Verpackung
+  Endprodukt Qualität OK
+  Gewicht innerhalb Toleranz
+  Verpackung entspricht Spezifikation
+  Charge Nummer zugewiesen
+  Rückverfolgbar Etikett angebracht
 
-SCHRITT 11: Registratie en opslag
-- Productie data opgeslagen
-- Kwaliteit gegevens geregistreerd
-- Voorraad systeem bijgewerkt
-- Verzend klaar melding
-- MELDING: Charge voltooid
+SCHRITT 11: Registrierung und Lagerung
+  Produktion Daten gespeichert
+  Qualität Daten registriert
+  Vorrat System aktualisiert
+  Versand bereit Meldung
+  MELDUNG: Charge vollendet
 
 SCHRITT 12: Cleaning-In-Place (CIP)
 Zeit 900sek ??
-- CIP cyclus gestart
-- Reinigings vloeistof circulatie
-- Temperatuur 65°C
-- Alkalische reiniging 15 min
-- Zure reiniging 10 min
-- Spoelen met water
+  CIP Zyklus gestartet
+  Reinigungs Flüssigkeit Zirkulation
+  Temperatur 65°C
+  Alkalische Reinigung 15 min
+  Saure Reinigung 10 min
+  Spülen mit Wasser
 
-SCHRITT 13: Systeem reset
-- Alle hulpmerkers RESET
-- Alle timers RESET
-- Alle tellers RESET
-- Systeem klaar voor volgende cyclus
-- Productie Bezig RESET
+SCHRITT 13: System zurücksetzen
+  Alle Hilfsmerker RÜCKSETZEN
+  Alle Timer RÜCKSETZEN
+  Alle Zähler RÜCKSETZEN
+  System bereit für nächsten Zyklus
+  Produktion Beschäftigt RÜCKSETZEN
 
-// Complexe cross-referenties
-Gestartet (Presselektion füllen/entleeren SCHRITT 1)
+// Komplexe Kreuzverweise
+Gestartet (Pressesektion füllen/entleeren SCHRITT 1)
 T15/16 Leer (Entleeren Einfuhrseite Pressen SCHRITT 3)
-Entleeren Einfuhrseite pressen fertig (Entleeren Einfuhrseite Pressen RUHE)
-Horde N21 voorgeselecteerd (Horde Selectie Programma FB102 SCHRITT 2+5+8+11)
-Kwaliteit Batch A OK (Kwaliteit Controle Programma FB201 SCHRITT 1+3+5)
+Entleeren Einfuhrseite Pressen fertig (Entleeren Einfuhrseite Pressen RUHE)
+Horde N21 vorgewählt (Horde Auswahl Programm FB102 SCHRITT 2+5+8+11)
+Qualität Batch A OK (Qualität Kontrolle Programm FB201 SCHRITT 1+3+5)
 
-// Complexe voorwaarden met geneste logica
+// Komplexe Bedingungen mit verschachtelter Logik
 [
-  (Temperatuur T01 >= 30 EN Temperatuur T01 <= 35) EN
-  (Druk P01 >= 2.0 EN Druk P01 <= 2.5) EN
-  (NICHT STORING: Temperatuur te hoog) EN
-  (NICHT STORING: Druk te laag)
+  (Temperatur T01 >= 30 UND Temperatur T01 <= 35) UND
+  (Druck P01 >= 2.0 UND Druck P01 <= 2.5) UND
+  (NICHT STÖRUNG: Temperatur zu hoch) UND
+  (NICHT STÖRUNG: Druck zu niedrig)
 ]
 
-// Matrix operaties
-Horde[Actieve_Horde].Etage_Data[1].Status = Bezet
-Horde[Actieve_Horde].Etage_Data[1].Temperatuur = T01
-Horde[Actieve_Horde].Etage_Data[1].Druk = P01
-Receptuur[Actieve_Receptuur].Fase[1].Tijd = 1800
-Receptuur[Actieve_Receptuur].Fase[1].Temperatuur = 32
+// Matrix Operationen
+Horde[Aktive_Horde].Etage_Daten[1].Status = Besetzt
+Horde[Aktive_Horde].Etage_Daten[1].Temperatur = T01
+Horde[Aktive_Horde].Etage_Daten[1].Druck = P01
+Rezeptur[Aktive_Rezeptur].Phase[1].Zeit = 1800
+Rezeptur[Aktive_Rezeptur].Phase[1].Temperatur = 32
 
-// Speciale industriële notaties
+// Spezielle industrielle Notationen
 Sensor_Array[1..16].Status = OK
 Timer_Block[T01..T20].Preset = 0
 Counter_Block[C01..C10].Current = 0
 Alarm_Buffer[1..100].Active = FALSE
 
-// Nederlandse/Duitse mix (realistische scenario)
-SCHRITT 14: Reiniging en desinfectie
-- Reinigings programma actief
-- Desinfectie middel gedoseerd
-- Spoeling met drinkwater
-- Bacteriële controle uitgevoerd
-- Hygiëne certificaat afgedrukt
+SCHRITT 14: Reinigung und Desinfektion
+  Reinigungs Programm aktiv
+  Desinfektions Mittel dosiert
+  Spülung mit Trinkwasser
+  Bakterielle Kontrolle durchgeführt
+  Hygiene Zertifikat gedruckt
 
-KLAAR: Productie cyclus voltooid
-- Alle processen succesvol afgerond
-- Systeem gereed voor volgende cyclus
-- Rapport gegenereerd
-- Kwaliteit geregistreerd
-- Systeem in RUHE stand
+FERTIG: Produktions Zyklus abgeschlossen
+  Alle Prozesse erfolgreich beendet
+  System bereit für nächsten Zyklus
+  Bericht generiert
+  Qualität registriert
+  System in RUHE Zustand
