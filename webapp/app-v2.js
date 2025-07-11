@@ -33,7 +33,15 @@ class StandaardwerkTrainerV2 {
     async init() {
         this.setupEventListeners();
         await this.loadConfiguration();
+        
+        // Load previously learned rules BEFORE loading data
+        await this.loadLearnedRules();
+        
         this.loadSavedData();
+        
+        // Auto-load alle 3 sample bestanden bij opstarten
+        await this.autoLoadSampleFiles();
+        
         this.updateDashboard();
         this.initializeCharts();
         lucide.createIcons();
@@ -48,6 +56,69 @@ class StandaardwerkTrainerV2 {
             }
         } catch (error) {
             console.warn('Could not load existing rules, using defaults');
+        }
+    }
+
+    async autoLoadSampleFiles() {
+        // Alleen laden als nog geen training data aanwezig is
+        if (this.trainingData.length > 0) {
+            console.log('Training data al aanwezig, skip auto-load');
+            return;
+        }
+
+        const sampleFiles = [
+            {
+                path: '../training-data/sample-industrial-program.txt',
+                name: 'sample-industrial-program.txt',
+                language: 'de'
+            },
+            {
+                path: '../training-data/sample-dutch-program.txt', 
+                name: 'sample-dutch-program.txt',
+                language: 'nl'
+            },
+            {
+                path: '../training-data/sample-english-program.txt',
+                name: 'sample-english-program.txt', 
+                language: 'en'
+            }
+        ];
+
+        console.log('🚀 Auto-loading sample training files...');
+        let loaded = 0;
+
+        for (const file of sampleFiles) {
+            try {
+                const response = await fetch(file.path);
+                if (response.ok) {
+                    const content = await response.text();
+                    const processedData = this.analyzeContent(content);
+                    
+                    this.trainingData.push({
+                        id: Date.now() + Math.random(),
+                        filename: file.name,
+                        size: content.length,
+                        content: content,
+                        processedData: processedData,
+                        uploadDate: new Date().toISOString(),
+                        isAutoLoaded: true,
+                        language: file.language
+                    });
+                    
+                    loaded++;
+                    console.log(`✅ Loaded ${file.name} (${file.language})`);
+                } else {
+                    console.warn(`❌ Could not load ${file.name}: ${response.status}`);
+                }
+            } catch (error) {
+                console.error(`❌ Error loading ${file.name}:`, error);
+            }
+        }
+
+        if (loaded > 0) {
+            console.log(`🎉 Auto-loaded ${loaded} sample files for training`);
+            this.updateUploadedFilesList();
+            this.showNotification(`${loaded} sample bestanden automatisch geladen voor training`, 'success');
         }
     }
 
@@ -98,6 +169,14 @@ class StandaardwerkTrainerV2 {
         
         // Detect document language
         analysis.detectedLanguage = this.detectDocumentLanguage(content);
+        
+        // Apply learned patterns if available
+        if (this.config.syntaxRules.patterns) {
+            analysis.appliedLearnedRules = true;
+            analysis.learnedRuleCount = Object.keys(this.config.syntaxRules.patterns.steps || {}).length +
+                                       Object.keys(this.config.syntaxRules.patterns.conditions || {}).length +
+                                       Object.keys(this.config.syntaxRules.patterns.variables || {}).length;
+        }
         
         lines.forEach((line, index) => {
             const trimmed = line.trim();
@@ -828,17 +907,133 @@ class StandaardwerkTrainerV2 {
     applyRealSuggestions(suggestions, patternStorage) {
         let applied = 0;
         
+        // Initialize syntax rules if empty
+        if (!this.config.syntaxRules.patterns) {
+            this.config.syntaxRules = {
+                patterns: {
+                    steps: {},
+                    conditions: {},
+                    variables: {},
+                    crossReferences: {}
+                },
+                confidence: {},
+                lastUpdated: new Date().toISOString()
+            };
+        }
+        
         suggestions.forEach(suggestion => {
             if (suggestion.confidence > 0.85) {
                 const key = `${suggestion.type}_${suggestion.pattern}`;
+                
+                // ECHTE RULE LEARNING: Update de syntax rules!
                 if (!patternStorage.has(key)) {
                     patternStorage.set(key, suggestion);
+                    
+                    // Apply suggestion to actual parsing rules
+                    if (suggestion.type === 'add_step_pattern') {
+                        this.config.syntaxRules.patterns.steps[suggestion.pattern] = {
+                            regex: suggestion.regex,
+                            confidence: suggestion.confidence,
+                            examples: suggestion.examples,
+                            frequency: suggestion.frequency,
+                            added: new Date().toISOString()
+                        };
+                        this.logMessage(`🔧 Nieuwe step pattern toegevoegd: ${suggestion.pattern}`);
+                    }
+                    
+                    if (suggestion.type === 'add_condition_pattern') {
+                        this.config.syntaxRules.patterns.conditions[suggestion.pattern] = {
+                            characteristics: suggestion.characteristics,
+                            confidence: suggestion.confidence,
+                            frequency: suggestion.frequency,
+                            added: new Date().toISOString()
+                        };
+                        this.logMessage(`🔧 Nieuwe condition pattern toegevoegd: ${suggestion.pattern}`);
+                    }
+                    
+                    if (suggestion.type === 'add_variable_type') {
+                        this.config.syntaxRules.patterns.variables[suggestion.pattern] = {
+                            examples: suggestion.examples,
+                            confidence: suggestion.confidence,
+                            frequency: suggestion.frequency,
+                            added: new Date().toISOString()
+                        };
+                        this.logMessage(`🔧 Nieuwe variable type toegevoegd: ${suggestion.pattern}`);
+                    }
+                    
+                    // Update confidence tracking
+                    this.config.syntaxRules.confidence[key] = suggestion.confidence;
+                    this.config.syntaxRules.lastUpdated = new Date().toISOString();
+                    
                     applied++;
+                    
+                    // Save updated rules immediately
+                    this.saveUpdatedRules();
                 }
             }
         });
         
+        if (applied > 0) {
+            this.logMessage(`🎯 ${applied} regels ECHT toegepast aan parser config!`);
+        }
+        
         return applied;
+    }
+
+    async saveUpdatedRules() {
+        try {
+            // Save rules to localStorage for persistence
+            const rulesData = {
+                syntaxRules: this.config.syntaxRules,
+                validationRules: this.config.validationRules,
+                savedAt: new Date().toISOString()
+            };
+            
+            localStorage.setItem('standaardwerk-learned-rules', JSON.stringify(rulesData));
+            
+            // Also try to save to results directory (if possible via service worker)
+            if ('serviceWorker' in navigator) {
+                const message = {
+                    type: 'SAVE_RULES',
+                    data: rulesData,
+                    filename: '../results/auto-training-results-v2/learned-syntax-rules.json'
+                };
+                
+                // Send to service worker if available
+                if (navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.controller.postMessage(message);
+                }
+            }
+            
+            this.logMessage('💾 Geleerde regels opgeslagen');
+        } catch (error) {
+            console.error('Error saving learned rules:', error);
+            this.logMessage('❌ Fout bij opslaan regels: ' + error.message);
+        }
+    }
+
+    async loadLearnedRules() {
+        try {
+            const savedRules = localStorage.getItem('standaardwerk-learned-rules');
+            if (savedRules) {
+                const rulesData = JSON.parse(savedRules);
+                
+                // Merge learned rules with existing config
+                if (rulesData.syntaxRules) {
+                    this.config.syntaxRules = { ...this.config.syntaxRules, ...rulesData.syntaxRules };
+                }
+                if (rulesData.validationRules) {
+                    this.config.validationRules = { ...this.config.validationRules, ...rulesData.validationRules };
+                }
+                
+                console.log('✅ Geleerde regels geladen vanuit vorige sessies');
+                this.logMessage('📚 Geleerde regels geladen vanuit vorige sessies');
+                return true;
+            }
+        } catch (error) {
+            console.error('Error loading learned rules:', error);
+        }
+        return false;
     }
 
     checkRealConvergence(iterations, threshold) {
